@@ -11,7 +11,7 @@ const SellerLayout = () => {
     { name: "Sản phẩm bị từ chối", path: "/seller/rejected" },
     { name: "Đơn hàng", path: "/seller/order" },
     { name: "Danh thu", path: "/seller/revenue" },
-    
+    { name: "Cập nhật hồ sơ", path: "/seller/profile" },
 
   ];
 

@@ -53,17 +53,15 @@ const AddCategory: React.FC = () => {
       if (file) formData.append("image", file);
 
       if (editId) {
-        // ✅ cập nhật danh mục
         await axios.put(`http://localhost:5000/categories/${editId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        setMessage("✅ Đã cập nhật danh mục!");
+        setMessage(" Đã cập nhật danh mục!");
       } else {
-        // ✅ thêm danh mục mới
         await axios.post("http://localhost:5000/categories", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        setMessage("✅ Danh mục đã được thêm!");
+        setMessage("Danh mục đã được thêm!");
       }
 
       // Reset form
@@ -74,7 +72,7 @@ const AddCategory: React.FC = () => {
       fetchCategories();
     } catch (err) {
       console.error(err);
-      setMessage("❌ Thao tác thất bại. Vui lòng thử lại.");
+      setMessage("Thao tác thất bại. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -159,7 +157,7 @@ const AddCategory: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+              className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
             >
               {loading ? "Đang xử lý..." : editId ? "Cập nhật danh mục" : "Lưu danh mục"}
             </button>
@@ -178,7 +176,7 @@ const AddCategory: React.FC = () => {
                 }}
                 className="text-sm text-gray-600 underline hover:text-red-600"
               >
-                ❌ Hủy chỉnh sửa
+              Hủy chỉnh sửa
               </button>
             </div>
           )}
@@ -198,40 +196,44 @@ const AddCategory: React.FC = () => {
 
       {/* Danh sách danh mục */}
       <div className="mt-12">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700">📂 Danh sách danh mục</h3>
-        {categories.length === 0 ? (
-          <p className="text-sm text-gray-500">Chưa có danh mục nào.</p>
-        ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {categories.map((cat) => (
-              <li
-                key={cat._id}
-                className="border border-gray-300 p-4 rounded-xl flex gap-4 items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  {cat.imageUrl && (
-                    <img
-                      src={`http://localhost:5000${cat.imageUrl}`}
-                      alt={cat.name}
-                      className="h-16 w-16 object-contain rounded-md border"
-                    />
-                  )}
-                  <div>
-                    <h4 className="font-semibold text-gray-800">{cat.name}</h4>
-                    {cat.description && <p className="text-sm text-gray-500">{cat.description}</p>}
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleEdit(cat)}
-                  className="text-blue-600 hover:underline text-sm"
-                >
-                  Sửa
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+  <h3 className="text-lg font-semibold mb-4 text-gray-700">📂 Danh sách danh mục</h3>
+
+  {categories.length === 0 ? (
+    <p className="text-sm text-gray-500">Chưa có danh mục nào.</p>
+  ) : (
+    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {categories.map((cat) => (
+        <li
+          key={cat._id}
+          className="border border-gray-300 p-4 rounded-xl flex items-center justify-between"
+        >
+          <div className="flex items-start gap-4">
+            {cat.imageUrl && (
+              <img
+                src={`http://localhost:5000${cat.imageUrl}`}
+                alt={cat.name}
+                className="h-16 w-16 object-cover rounded-md border"
+              />
+            )}
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-800">{cat.name}</h4>
+              {cat.description && (
+                <p className="text-sm text-gray-500 mt-1">{cat.description}</p>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleEdit(cat)}
+            className="text-blue-600 hover:underline text-sm ml-4 whitespace-nowrap"
+          >
+            Sửa
+          </button>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
     </div>
   );
 };

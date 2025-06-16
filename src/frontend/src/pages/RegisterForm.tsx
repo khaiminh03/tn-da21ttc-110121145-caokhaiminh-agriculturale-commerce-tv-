@@ -19,15 +19,15 @@ export default function RegisterForm() {
 
     try {
       const response = await axios.post("http://localhost:5000/auth/register", formData);
-      console.log("✅ Đăng ký thành công:", response.data);
+      console.log("Đăng ký thành công:", response.data);
 
       alert("🎉 Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản.");
       setFormData({ email: "", password: "" });
     } catch (error: any) {
       const message =
         error.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.";
-      console.error("❌ Lỗi đăng ký:", message);
-      alert(`❌ ${message}`);
+      console.error("Lỗi đăng ký:", message);
+      alert(`${message}`);
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ export default function RegisterForm() {
 
   return (
     <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-2xl shadow-2xl">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">🔐 Đăng ký tài khoản</h2>
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Đăng ký tài khoản</h2>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -71,8 +71,8 @@ export default function RegisterForm() {
           disabled={loading}
           className={`w-full py-3 font-semibold text-white rounded-xl transition-all ${
             loading
-              ? "bg-blue-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
+              ? "bg-green-400 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
           }`}
         >
           {loading ? "Đang xử lý..." : "Tạo tài khoản"}
@@ -80,7 +80,7 @@ export default function RegisterForm() {
       </form>
 
       <p className="mt-6 text-sm text-center text-gray-500">
-        Đã có tài khoản? <a href="/login" className="text-blue-600 hover:underline">Đăng nhập</a>
+        Đã có tài khoản? <a href="/login" className="text-green-600 hover:underline">Đăng nhập</a>
       </p>
     </div>
   );

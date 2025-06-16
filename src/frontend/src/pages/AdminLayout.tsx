@@ -31,10 +31,9 @@ const AdminLayout = () => {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 md:px-8 border-b border-gray-300 py-3 bg-white transition-all duration-300">
-        {/* ✅ Sửa: dùng Link thay vì <a> để tránh reload */}
         <Link to="/">
           <img
-            className="h-9"
+            className="h-9 border-none shadow-none outline-none"
             src={assets.logoe}
             alt="Logo"
           />

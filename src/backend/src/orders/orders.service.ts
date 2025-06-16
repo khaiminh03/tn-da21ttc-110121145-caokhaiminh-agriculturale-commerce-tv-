@@ -523,6 +523,12 @@ async getBestSellingProducts(limit: number = 5) {
       },
     },
     { $unwind: '$product' },
+    // ⚠️ Chỉ lấy sản phẩm đã được duyệt (approved)
+    {
+      $match: {
+        'product.status': 'approved',
+      },
+    },
     {
       $project: {
         _id: 0,

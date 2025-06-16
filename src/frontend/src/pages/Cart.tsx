@@ -84,6 +84,7 @@ const Cart = () => {
       setAddress(newAddress);
       setShowAddress(false);
       toast.success("Cập nhật địa chỉ thành công!");
+      window.dispatchEvent(new Event("userInfoUpdated"));
     } catch (error) {
       toast.success(`Cập nhật địa chỉ thất bại`);
     }

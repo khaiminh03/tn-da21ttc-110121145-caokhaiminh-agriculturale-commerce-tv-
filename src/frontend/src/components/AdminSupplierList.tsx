@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 interface Supplier {
   _id: string;
@@ -6,6 +7,7 @@ interface Supplier {
   phone: string;
   address: string;
   isApproved: boolean;
+  isRejected?: boolean;
 }
 
 const AdminSupplierList: React.FC = () => {
@@ -20,7 +22,7 @@ const AdminSupplierList: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/store-profiles", {
+      const res = await fetch("http://localhost:5000/store-profiles/admin/all", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Không thể lấy danh sách nhà cung cấp");
@@ -32,10 +34,30 @@ const AdminSupplierList: React.FC = () => {
       setLoading(false);
     }
   };
+  const rejectSupplier = async (id: string) => {
+  if (!token) {
+    toast.warn("Bạn chưa đăng nhập hoặc hết phiên làm việc");
+    return;
+  }
+  try {
+    const res = await fetch(
+      `http://localhost:5000/store-profiles/${id}/reject`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    if (!res.ok) throw new Error("Từ chối nhà cung cấp thất bại");
+    toast.error("Đã từ chối nhà cung cấp");
+    fetchSuppliers();
+  } catch (error: any) {
+    alert(error.message || "Lỗi khi từ chối nhà cung cấp");
+  }
+};
 
   const approveSupplier = async (id: string) => {
     if (!token) {
-      alert("Bạn chưa đăng nhập hoặc hết phiên làm việc");
+    toast.warn("Bạn chưa đăng nhập hoặc hết phiên làm việc");
       return;
     }
     try {
@@ -47,7 +69,7 @@ const AdminSupplierList: React.FC = () => {
         }
       );
       if (!res.ok) throw new Error("Duyệt nhà cung cấp thất bại");
-      alert("✅ Duyệt thành công");
+      toast.success("Duyệt thành công");
       fetchSuppliers();
     } catch (error: any) {
       alert(error.message || "Lỗi khi duyệt nhà cung cấp");
@@ -69,6 +91,7 @@ const AdminSupplierList: React.FC = () => {
   if (loading) {
     return <div className="text-center text-gray-500 mt-10">Đang tải dữ liệu...</div>;
   }
+
 
   return (
     <div className="px-6 max-w-screen-xl mx-auto">
@@ -99,25 +122,39 @@ const AdminSupplierList: React.FC = () => {
                   <td className="px-5 py-4">{s.address}</td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                        s.isApproved
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {s.isApproved ? "Đã duyệt" : "Chờ duyệt"}
-                    </span>
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                      s.isApproved
+                        ? "bg-green-100 text-green-700"
+                        : s.isRejected
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {s.isApproved
+                      ? "Đã duyệt"
+                      : s.isRejected
+                      ? "Đã từ chối"
+                      : "Chờ duyệt"}
+                  </span>
                   </td>
                   <td className="px-5 py-4 text-center">
-                    {!s.isApproved && (
+                  {!s.isApproved && !s.isRejected && (
+                    <div className="flex justify-center gap-2">
                       <button
                         onClick={() => approveSupplier(s._id)}
-                        className="bg-red-500 text-white px-4 py-1.5 rounded-md hover:bg-red-600 transition text-sm font-semibold"
+                        className="bg-green-500 text-white px-4 py-1.5 rounded-md hover:bg-green-600 transition text-sm font-semibold"
                       >
                         Duyệt
                       </button>
-                    )}
-                  </td>
+                      <button
+                        onClick={() => rejectSupplier(s._id)}
+                        className="bg-red-500 text-white px-4 py-1.5 rounded-md hover:bg-red-600 transition text-sm font-semibold"
+                      >
+                        Từ chối
+                      </button>
+                    </div>
+                  )}
+                </td>
                 </tr>
               ))}
             </tbody>

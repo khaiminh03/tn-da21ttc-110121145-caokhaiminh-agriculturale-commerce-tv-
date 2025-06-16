@@ -40,6 +40,7 @@ export class StoreProfileController {
       address: profile.address,
       imageUrl: profile.imageUrl,
       isApproved: profile.isApproved,
+      isRejected: profile.isRejected,
       isComplete,
     };
   }
@@ -71,13 +72,19 @@ export class StoreProfileController {
       throw new UnauthorizedException('Thiếu thông tin người dùng');
     }
 
-    const imageUrl = image ? `/store-profile/${image.filename}` : '';
+    const imageUrl = image
+    ? `/store-profile/${image.filename}`
+    : dto.imageUrl ?? '';
     return this.storeProfileService.createOrUpdate(req.user.userId, {
       ...dto,
       imageUrl,
     });
   }
-
+@UseGuards(JwtAuthGuard)
+@Get('admin/all')
+async getAllProfiles() {
+  return this.storeProfileService.findAll();
+}
   // ======= 3. Duyệt hồ sơ =======
   @Patch(':id/approve')
   async approve(@Param('id') id: string) {
@@ -108,10 +115,8 @@ export class StoreProfileController {
   async getApprovedStores() {
     return this.storeProfileService.findApprovedStores();
   }
-
-  // Nếu cần cho admin xem toàn bộ, có thể tạo route riêng:
-  // @Get('all')
-  // async findAll() {
-  //   return this.storeProfileService.findAll();
-  // }
+@Patch(':id/reject')
+async reject(@Param('id') id: string) {
+  return this.storeProfileService.rejectProfile(id);
+}
 }

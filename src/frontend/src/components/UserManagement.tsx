@@ -78,18 +78,20 @@ const UserManagement: React.FC = () => {
                 <tr key={user._id} className="hover:bg-gray-50 transition">
                   <td className="px-5 py-4 font-medium">{index + 1}</td>
                   <td className="px-5 py-4">
-                    <img
-                      src={
-                        user.avatarUrl?.startsWith("http") ||
-                        user.avatarUrl?.startsWith("data:")
-                          ? user.avatarUrl
-                          : user.avatarUrl
-                          ? `http://localhost:5000${user.avatarUrl}`
-                          : assets.profile_icon
-                      }
-                      alt="avatar"
-                      className="w-10 h-10 rounded-full object-cover border border-gray-500/30 shadow-sm"
-                    />
+                   <img
+                        src={
+                          user.avatarUrl?.startsWith("http") || user.avatarUrl?.startsWith("data:")
+                            ? user.avatarUrl
+                            : user.avatarUrl
+                            ? `http://localhost:5000${user.avatarUrl}`
+                            : assets.profile_icon
+                        }
+                        alt="avatar"
+                        className="w-10 h-10 rounded-full object-cover border border-gray-500/30 shadow-sm"
+                        onError={(e) => {
+                          e.currentTarget.src = assets.profile_icon;
+                        }}
+                      />
                   </td>
                   <td className="px-5 py-4">{user.name}</td>
                   <td className="px-5 py-4">{user.email}</td>

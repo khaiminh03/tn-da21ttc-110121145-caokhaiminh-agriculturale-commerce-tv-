@@ -10,17 +10,17 @@ const VerifyEmail = () => {
   useEffect(() => {
     const token = searchParams.get("token");
     if (!token) {
-      setStatus("❌ Thiếu token xác minh.");
+      setStatus("Thiếu token xác minh.");
       return;
     }
 
     axios
       .get(`http://localhost:5000/auth/verify-email?token=${token}`)
       .then(() => {
-        setStatus("✅ Tài khoản đã được xác minh thành công!");
-        setTimeout(() => navigate("/login"), 3000); // Tự động chuyển hướng
+        setStatus("Tài khoản đã được xác minh thành công!");
+        setTimeout(() => navigate("/login"), 2000); // Tự động chuyển hướng
       })
-      .catch(() => setStatus("❌ Token không hợp lệ hoặc đã hết hạn."));
+      .catch(() => setStatus("Token không hợp lệ hoặc đã hết hạn."));
   }, [navigate, searchParams]);
 
   return (

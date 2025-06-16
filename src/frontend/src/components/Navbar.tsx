@@ -14,7 +14,7 @@ const Navbar = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
-  const [hasRegistered, setHasRegistered] = useState(false);
+  const [oldImagePath, setOldImagePath] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -31,7 +31,6 @@ const Navbar = () => {
       const token = localStorage.getItem("accessToken");
       setIsLoggedIn(!!token);
       if (!token) {
-        setHasRegistered(false);
         setUserInfo(null);
       } else {
         const storedUser = localStorage.getItem("user_info");
@@ -40,7 +39,12 @@ const Navbar = () => {
     };
     checkLogin();
     window.addEventListener("storage", checkLogin);
-    return () => window.removeEventListener("storage", checkLogin);
+    window.addEventListener("userInfoUpdated", checkLogin);
+    return () => {
+      window.removeEventListener("storage", checkLogin);
+      window.removeEventListener("userInfoUpdated", checkLogin);
+    }
+    
   }, []);
 
    // ✅ Listen and update cart count
@@ -68,7 +72,6 @@ const Navbar = () => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user_info");
       setIsLoggedIn(false);
-      setHasRegistered(false);
       setUserInfo(null);
       navigate("/");
       window.dispatchEvent(new Event("storage"));
@@ -88,71 +91,83 @@ const Navbar = () => {
   };
 
   // Xử lý trở thành nhà cung cấp
-  const handleRegisterSupplier = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      navigate("/login");
+ const handleRegisterSupplier = async () => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/store-profiles/my-profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+
+    if (res.status === 200) {
+      const isApproved = data.isApproved === true || data.isApproved === "true";
+      const isRejected = data.isRejected === true || data.isRejected === "true";
+      const isComplete = data.isComplete === true || data.isComplete === "true";
+
+      if (isApproved) {
+        toast.success("Bạn đã là nhà cung cấp được duyệt.");
+        setShowSupplierModal(false);
+        return;
+      }
+
+      if (isRejected) {
+      toast.info("Hồ sơ bị từ chối. Vui lòng chỉnh sửa và gửi lại.");
+      setStoreName(data.storeName || "");
+      setPhone(data.phone || "");
+      setAddress(data.address || "");
+
+      const fullUrl = data.imageUrl?.startsWith("http")
+        ? data.imageUrl
+        : `http://localhost:5000/uploads${data.imageUrl}`;
+      setImagePreview(fullUrl); // để hiển thị
+      setOldImagePath(data.imageUrl || null); 
+
+      setShowSupplierModal(true);
       return;
     }
 
-    try {
-      const res = await fetch("http://localhost:5000/store-profiles/my-profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.status === 200) {
-        const data = await res.json();
-
-        if (data.isApproved) {
-          toast.success("Bạn đã là nhà cung cấp được duyệt."); 
-          setHasRegistered(true);
-          setShowSupplierModal(false);
-          return;
-        }
-
-        if (data.isComplete) {
-          toast.success("Bạn đã đăng ký. Vui lòng chờ admin duyệt");
-          setHasRegistered(true);
-          setShowSupplierModal(false);
-          return;
-        }
-
-        setHasRegistered(false);
-        setStoreName(data.storeName || "");
-        setPhone(data.phone || "");
-        setAddress(data.address || "");
-        setShowSupplierModal(true);
-      } else if (res.status === 404) {
-        setHasRegistered(false);
-        setStoreName("");
-        setPhone("");
-        setAddress("");
-        setShowSupplierModal(true);
-      } else {
-        toast.error("Lỗi khi kiểm tra trạng thái nhà cung cấp.");
+      if (isComplete) {
+        toast.info("Bạn đã đăng ký rồi. Vui lòng chờ admin duyệt.");
         setShowSupplierModal(false);
+        return;
       }
-    } catch {
-      toast.error("Lỗi khi lấy thông tin nhà cung cấp.");
+
+      // Nếu không có flag nào khớp, mặc định cho phép đăng ký
+      setStoreName(data.storeName || "");
+      setPhone(data.phone || "");
+      setAddress(data.address || "");
+      setShowSupplierModal(true);
+    } else if (res.status === 404) {
+      // Chưa từng đăng ký
+      setStoreName("");
+      setPhone("");
+      setAddress("");
+      setShowSupplierModal(true);
+    } else {
+      toast.error("Lỗi khi kiểm tra trạng thái nhà cung cấp.");
       setShowSupplierModal(false);
     }
-  };
+  } catch {
+    toast.error("Lỗi khi lấy thông tin nhà cung cấp.");
+    setShowSupplierModal(false);
+  }
+};
 
   // Gửi đăng ký nhà cung cấp
 const handleSubmitRegister = async () => {
   if (loading) return;
-
-  if (hasRegistered) {
-    toast.success("Bạn đã đăng ký rồi, không thể gửi lại.");
-    return;
-  }
 
   if (!storeName.trim() || !phone.trim() || !address.trim()) {
     toast.warn("Vui lòng nhập đầy đủ thông tin.");
     return;
   }
 
-  // ✅ Kiểm tra định dạng số điện thoại
   if (!isValidPhoneNumber(phone.trim())) {
     toast.warn("Số điện thoại phải có đúng 10 chữ số.");
     return;
@@ -170,8 +185,11 @@ const handleSubmitRegister = async () => {
     formData.append("storeName", storeName.trim());
     formData.append("phone", phone.trim());
     formData.append("address", address.trim());
+
     if (imageFile) {
       formData.append("image", imageFile);
+    } else if (oldImagePath) {
+      formData.append("imageUrl", oldImagePath);
     }
 
     const response = await fetch("http://localhost:5000/store-profiles", {
@@ -182,6 +200,8 @@ const handleSubmitRegister = async () => {
       body: formData,
     });
 
+    const result = await response.json();
+
     if (response.ok) {
       toast.success("Đăng ký thành công! Vui lòng chờ admin duyệt.");
       setShowSupplierModal(false);
@@ -190,26 +210,18 @@ const handleSubmitRegister = async () => {
       setAddress("");
       setImageFile(null);
       setImagePreview(null);
-      setHasRegistered(true);
+      setOldImagePath(null); 
     } else {
-      const errorData = await response.json();
-      if (
-        errorData.message &&
-        errorData.message.toLowerCase().includes("đăng ký nhà cung cấp rồi")
-      ) {
-        toast.success("Bạn đã gửi đăng ký rồi, vui lòng chờ admin duyệt.");
-        setHasRegistered(true);
-        setShowSupplierModal(false);
-      } else {
-        toast.error("Lỗi: " + (errorData.message || response.statusText));
-      }
+      toast.error("Lỗi: " + (result.message || "Không thể gửi đăng ký."));
     }
-  } catch {
+  } catch (err) {
     toast.error("Lỗi hệ thống khi gửi đăng ký!");
   } finally {
     setLoading(false);
   }
 };
+
+
 
 
   // Cập nhật thông tin cá nhân
@@ -432,16 +444,22 @@ const handleSubmitRegister = async () => {
           type="file"
           accept="image/*"
           onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              setImageFile(file);
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-              };
-              reader.readAsDataURL(file);
-            }
-          }}
+          const file = e.target.files?.[0];
+          if (file) {
+            setImageFile(file);
+            setOldImagePath(null); // <-- Vì đã có ảnh mới
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+          } else {
+            // Nếu không chọn ảnh mới, vẫn giữ ảnh cũ
+            setImageFile(null);
+            setImagePreview(oldImagePath ? `http://localhost:5000${oldImagePath}` : null);
+          }
+        }}
+
           className="file:mr-4 file:py-2 file:px-4
             file:rounded-md file:border-0
             file:text-sm file:font-medium
@@ -452,29 +470,25 @@ const handleSubmitRegister = async () => {
       </div>
 
       {imagePreview && (
-        <div className="flex justify-center">
-          <img
-            src={imagePreview}
-            alt="Ảnh xem trước"
-            className="w-20 h-20 object-cover rounded-full border border-gray-300 shadow-sm"
-          />
-        </div>
-      )}
-
+      <div className="flex justify-center">
+        <img
+          src={imagePreview}
+          alt="Ảnh xem trước"
+          className="w-20 h-20 object-cover rounded-full border border-gray-300 shadow-sm"
+        />
+      </div>
+    )}
       <Button
-        variant="contained"
-        color="primary"
-        onClick={handleSubmitRegister}
-        disabled={loading || hasRegistered}
-        fullWidth
-        className="!mt-2 !bg-green-600 hover:!bg-green-700 transition-all"
-      >
-        {loading
-          ? "Đang gửi..."
-          : hasRegistered
-          ? "Đã gửi đăng ký"
-          : "Gửi đăng ký"}
-      </Button>
+  variant="contained"
+  color="primary"
+  onClick={handleSubmitRegister}
+  disabled={loading}
+  fullWidth
+  className="!mt-2 !bg-green-600 hover:!bg-green-700 transition-all"
+>
+  {loading ? "Đang gửi..." : "Gửi đăng ký"}
+</Button>
+
     </div>
   </Box>
 </Modal>

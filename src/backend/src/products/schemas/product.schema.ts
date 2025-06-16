@@ -39,16 +39,16 @@ export class Product {
   categoryId: Types.ObjectId;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-  supplierId: Types.ObjectId; // người đăng sản phẩm (role = 'supplier')
+  supplierId: Types.ObjectId; 
 
   @Prop({ default: true })
   isActive: boolean;
 
   @Prop({
-    enum: ['pending', 'approved', 'rejected', 'out_of_stock'],
+    enum: ['pending', 'approved', 'rejected', 'hidden'],
     default: 'pending',
   })
-  status: 'pending' | 'approved' | 'rejected' | 'out_of_stock';
+  status: 'pending' | 'approved' | 'rejected' | 'hidden';
    @Prop()
   rejectionReason?: string;
 

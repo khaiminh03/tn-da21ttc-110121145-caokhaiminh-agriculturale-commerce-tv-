@@ -32,11 +32,12 @@ import AdminPendingProducts from "./pages/AdminPendingProducts";
 import AdminReviewList from "./pages/AdminReviewList";
 import ProductCardEdit from "./pages/ProductCardEdit";
 import AdminCharts from "./pages/AdminCharts"
+import SellerProfileForm from "./pages/SellerProfileForm";
 const App: React.FC = () => {
   const location = useLocation();
 
   const publicPaths = [
-    "/", "/add", "/sp", "/dangky", "/product","/login", "/cart",
+    "/", "/add", "/sp", "/sign", "/product","/login", "/cart",
     "/myorder", "/products", "/search", "/verify-email",
     "/forgot-password", "/reset-password"
   ];
@@ -85,6 +86,7 @@ const App: React.FC = () => {
             <Route path="rejected" element={<ProductCardEdit/>} />
             <Route path="order" element={<SupplierOrderManagement />} />
             <Route path="revenue" element={<SupplierRevenueDashboard />} />
+            <Route path="profile" element={<SellerProfileForm />} />
 
           </Route>
 

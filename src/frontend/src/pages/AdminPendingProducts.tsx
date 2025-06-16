@@ -4,11 +4,19 @@ import axios from 'axios';
 interface Product {
   _id: string;
   name: string;
+  categoryId: string;
   price: number;
-  stock: number;
-  origin: string;
+  inStock: boolean;
   images: string[];
-  status: string;
+  category: string;
+  supplierId: string;
+  supplierName?: string;
+  supplierPhone?: string;
+  origin: string;
+  description?: string;
+  stock?: number;
+  unitType?: string;
+  quantity?: string;
   rejectionReason?: string;
 }
 
@@ -18,6 +26,7 @@ const AdminPendingProducts = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
 
   const fetchPendingProducts = async () => {
     const res = await axios.get('http://localhost:5000/products/admin?status=pending');
@@ -63,6 +72,14 @@ const AdminPendingProducts = () => {
     }
   };
 
+  const openDetailModal = (product: Product) => {
+    setDetailProduct(product);
+  };
+
+  const closeDetailModal = () => {
+    setDetailProduct(null);
+  };
+
   useEffect(() => {
     fetchPendingProducts();
     fetchRejectedProducts();
@@ -91,7 +108,7 @@ const AdminPendingProducts = () => {
               <p className="text-sm text-gray-600 mb-1">Tồn kho: {p.stock}</p>
               <p className="text-sm text-gray-600">Xuất xứ: {p.origin}</p>
 
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={() => handleApprove(p._id)}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition"
@@ -103,6 +120,12 @@ const AdminPendingProducts = () => {
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition"
                 >
                   Từ chối
+                </button>
+                <button
+                  onClick={() => openDetailModal(p)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
+                >
+                  Chi tiết
                 </button>
               </div>
             </div>
@@ -130,7 +153,7 @@ const AdminPendingProducts = () => {
               <p className="text-sm text-gray-600 mb-1">Giá: {p.price.toLocaleString()}₫</p>
               <p className="text-sm text-gray-600 mb-1">Tồn kho: {p.stock}</p>
               <p className="text-sm text-gray-600">Xuất xứ: {p.origin}</p>
-              <p className="text-sm text-gray-600">Nhà cung cấp: {(p as any).storeName || 'Không rõ'}</p>
+              <p className="text-sm text-gray-600">Nhà cung cấp: {p.supplierName || 'Không rõ'}</p>
               <p className="mt-3 text-sm text-red-700 bg-red-100 border border-red-200 px-4 py-1 rounded-full inline-block font-medium">
                 ❗ Lý do từ chối: {p.rejectionReason || 'Không có'}
               </p>
@@ -163,6 +186,41 @@ const AdminPendingProducts = () => {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
               >
                 Từ chối
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal chi tiết sản phẩm */}
+      {detailProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-xl">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Chi tiết sản phẩm</h2>
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <img
+                src={`http://localhost:5000/uploads/products/${detailProduct.images[0]}`}
+                alt={detailProduct.name}
+                className="w-full md:w-1/2 max-h-64 object-contain rounded-lg border border-gray-500/30"
+              />
+              <div className="flex-1 text-sm text-gray-700 space-y-2">
+                <p><span className="font-medium text-gray-900">Tên:</span> {detailProduct.name}</p>
+                <p><span className="font-medium text-gray-900">Giá:</span> {detailProduct.price.toLocaleString('vi-VN')}₫</p>
+                <p><span className="font-medium text-gray-900">Xuất xứ:</span> {detailProduct.origin}</p>
+                <p><span className="font-medium text-gray-900">Danh mục:</span> {detailProduct.category}</p>
+                <p><span className="font-medium text-gray-900">Nhà cung cấp:</span> {detailProduct.supplierName ?? 'Không rõ'}</p>
+                <p><span className="font-medium text-gray-900">SĐT nhà cung cấp:</span> {detailProduct.supplierPhone ?? 'Không rõ'}</p>
+                <p><span className="font-medium text-gray-900">Tồn kho:</span> {detailProduct.stock ?? 'Không rõ'}</p>
+                <p><span className="font-medium text-gray-900">Đơn vị:</span> {detailProduct.unitType ?? 'Không rõ'}</p>
+                <p><span className="font-medium text-gray-900">Mô tả:</span> {detailProduct.description ?? 'Không có mô tả'}</p>
+              </div>
+            </div>
+            <div className="text-right mt-6">
+              <button
+                onClick={closeDetailModal}
+                className="inline-flex items-center px-5 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition"
+              >
+                Đóng
               </button>
             </div>
           </div>

@@ -17,13 +17,14 @@ interface TopProductItem {
   sold: number;
 }
 
-const STATUS_ORDER = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Giao thất bại', 'Hoàn thành'];
+const STATUS_ORDER = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao hàng', 'Giao thất bại', 'Hoàn thành','Đã huỷ'];
 const STATUS_COLORS: Record<string, string> = {
   'Chờ xác nhận': '#facc15',
   'Đã xác nhận': '#38bdf8',
   'Đang giao hàng': '#6366f1',
   'Giao thất bại': '#ef4444',
   'Hoàn thành': '#22c55e',
+  'Đã huỷ': '#b91c1c'
 };
 
 export default function AdminRevenueDashboard() {

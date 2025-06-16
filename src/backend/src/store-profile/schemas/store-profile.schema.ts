@@ -20,6 +20,10 @@ export class StoreProfile {
 
   @Prop({ default: false })
   isApproved: boolean; // Admin duyệt hay chưa
+
+  @Prop({ default: false })
+  isRejected: boolean;
+
 }
 
 export type StoreProfileDocument = StoreProfile & Document;

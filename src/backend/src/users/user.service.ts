@@ -4,10 +4,16 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { Product } from '../products/schemas/product.schema';
 import * as bcrypt from 'bcrypt';
+import { Types } from 'mongoose';
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Product.name) private productModel: Model<Product>,
+
+) {}
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
   // 🔎 Kiểm tra email đã tồn tại chưa
   const existingUser = await this.userModel.findOne({ email: createUserDto.email });
@@ -111,6 +117,13 @@ async becomeSupplier(userId: string, phone: string, address: string): Promise<Us
   if (!updatedUser) {
     throw new NotFoundException('User không tồn tại');
   }
+   // 👇 Nếu là nhà cung cấp thì cập nhật trạng thái sản phẩm của họ
+    if (updatedUser.role === 'supplier') {
+      await this.productModel.updateMany(
+        { supplierId: new Types.ObjectId(userId) },
+        { $set: { status: block ? 'hidden' : 'approved' } }
+      );
+    }
 
   return updatedUser;
 }

@@ -34,38 +34,38 @@ export class StoreProfileService {
     return created.save();
   }
 
-  async createOrUpdate(userId: string, dto: CreateStoreProfileDto): Promise<StoreProfileDocument> {
-    if (!isValidObjectId(userId)) {
-      throw new BadRequestException('userId không hợp lệ');
-    }
-
-    const existing = await this.storeProfileModel.findOne({ userId: new Types.ObjectId(userId) });
-
-    if (existing) {
-      const isComplete = !!existing.storeName && !!existing.phone && !!existing.address;
-
-      if (isComplete && !existing.isApproved) {
-        throw new BadRequestException('Bạn đã gửi đăng ký rồi, vui lòng chờ admin duyệt.');
-      }
-
-      if (existing.isApproved) {
-        throw new BadRequestException('Bạn đã là nhà cung cấp được duyệt.');
-      }
-
-      existing.storeName = dto.storeName;
-      existing.phone = dto.phone;
-      existing.address = dto.address;
-      existing.isApproved = false;
-      return existing.save();
-    } else {
-      const created = new this.storeProfileModel({
-        userId: new Types.ObjectId(userId),
-        ...dto,
-        isApproved: false,
-      });
-      return created.save();
-    }
+async createOrUpdate(userId: string, dto: CreateStoreProfileDto): Promise<StoreProfileDocument> {
+  if (!isValidObjectId(userId)) {
+    throw new BadRequestException('userId không hợp lệ');
   }
+
+  const existing = await this.storeProfileModel.findOne({ userId: new Types.ObjectId(userId) });
+
+  if (existing) {
+    existing.storeName = dto.storeName;
+    existing.phone = dto.phone;
+    existing.address = dto.address;
+    existing.imageUrl = dto.imageUrl ?? '';
+
+    // Nếu đã bị từ chối => cho phép sửa và gửi lại -> reset trạng thái
+    if (existing.isRejected) {
+      existing.isRejected = false;
+      existing.isApproved = false;
+    }
+
+    return existing.save();
+  } else {
+    // Nếu chưa có hồ sơ => tạo mới
+    const created = new this.storeProfileModel({
+      userId: new Types.ObjectId(userId),
+      ...dto,
+      isApproved: false,
+      isRejected: false,
+    });
+    return created.save();
+  }
+}
+
 
   async findAll(): Promise<StoreProfileDocument[]> {
     return this.storeProfileModel.find().populate('userId', 'name email').exec();
@@ -95,4 +95,17 @@ export class StoreProfileService {
     .populate('userId', 'name email')
     .exec();
 }
+async rejectProfile(id: string): Promise<StoreProfileDocument> {
+  const profile = await this.storeProfileModel.findById(id);
+  if (!profile) {
+    throw new NotFoundException('Không tìm thấy hồ sơ');
+  }
+
+  profile.isApproved = false;
+  profile.isRejected = true;
+  await profile.save();
+
+  return profile;
+}
+
 }

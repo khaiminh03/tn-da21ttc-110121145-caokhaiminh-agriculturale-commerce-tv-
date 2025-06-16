@@ -143,8 +143,8 @@ const MyOrders = () => {
             </div>
 
             {order.items.map((item, idx) => (
-              <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                <div className="space-y-2">
+              <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-t pt-4">
+                <div className="space-y-2 col-span-2">
                   <div className="flex gap-3 items-center">
                     <img
                       src={item.productId?.images?.[0]
@@ -160,18 +160,27 @@ const MyOrders = () => {
                     </div>
                   </div>
                 </div>
+
+                {order.status === "Đã thanh toán" && order.shippingStatus === "Hoàn thành" && (
+                  <div className="flex justify-end items-center">
+                    {item.isReviewed ? (
+                      <span className="text-green-600 font-medium">Đã đánh giá</span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedProductId(item.productId?._id || null);
+                          setSelectedOrderId(order._id);
+                          setOpen(true);
+                        }}
+                        className="px-4 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                      >
+                        Đánh giá
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
-
-            <div className="text-sm">
-              {order.status === "Đã thanh toán" && order.shippingStatus === "Hoàn thành" && (
-                order.items.some((item) => !item.isReviewed) ? (
-                  <p className="text-red-500 font-medium">Chưa đánh giá</p>
-                ) : (
-                  <p className="text-green-600 font-medium">Đã đánh giá</p>
-                )
-              )}
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
               <div className="space-y-1">
@@ -194,26 +203,6 @@ const MyOrders = () => {
                   Hủy đơn hàng
                 </button>
               </div>
-            )}
-
-            {order.status === "Đã thanh toán" &&
-              order.shippingStatus === "Hoàn thành" &&
-              order.items.some(item => !item.isReviewed) && (
-                <div className="text-right">
-                  <button
-                    onClick={() => {
-                      const firstUnreviewed = order.items.find(i => !i.isReviewed);
-                      if (firstUnreviewed) {
-                        setSelectedProductId(firstUnreviewed.productId?._id || null);
-                        setSelectedOrderId(order._id);
-                        setOpen(true);
-                      }
-                    }}
-                    className="mt-4 px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                  >
-                    Đánh giá sản phẩm
-                  </button>
-                </div>
             )}
           </div>
         ))

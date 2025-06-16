@@ -52,7 +52,7 @@ const ForgotPasswordForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2.5 rounded-full font-medium transition-all ${
+            className={`w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-medium transition-all ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >

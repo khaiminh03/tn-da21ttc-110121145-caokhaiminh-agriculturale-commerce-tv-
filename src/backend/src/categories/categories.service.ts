@@ -27,13 +27,6 @@ export class CategoriesService {
     return category;
   }
 
-  // async update(id: string, updateData: Partial<CreateCategoryDto>): Promise<Category> {
-  //   const updatedCategory = await this.categoryModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
-  //   if (!updatedCategory) {
-  //     throw new NotFoundException(`Category with id ${id} not found`);
-  //   }
-  //   return updatedCategory;
-  // }
 async update(id: string, updateData: Partial<CreateCategoryDto>): Promise<Category> {
   const updatedCategory = await this.categoryModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
   if (!updatedCategory) {
@@ -47,7 +40,4 @@ async update(id: string, updateData: Partial<CreateCategoryDto>): Promise<Catego
       throw new NotFoundException(`Category with id ${id} not found`);
     }
   }
-  //  async findCategoryById(categoryId: string): Promise<Category | null> {
-  //   return this.categoryModel.findById(categoryId).exec();
-  // }
 }
