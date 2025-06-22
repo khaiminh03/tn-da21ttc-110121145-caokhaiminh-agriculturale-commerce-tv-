@@ -1,12 +1,12 @@
 import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class OrderItemDto {
+export class OrderItemDto {
   @IsNotEmpty()
   @IsString()
   productId: string;
 
-  @IsNotEmpty() // ✅ thêm dòng này
+  @IsNotEmpty()
   @IsString()
   supplierId: string;
 
@@ -36,6 +36,6 @@ export class CreateOrderDto {
   @IsString()
   paymentMethod: string;
 
-  @IsEnum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'])
+  @IsEnum(['Chưa thanh toán', 'Đã thanh toán', 'Đã huỷ'])
   status: string;
 }

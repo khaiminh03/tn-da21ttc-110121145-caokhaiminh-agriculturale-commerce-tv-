@@ -28,7 +28,7 @@ const BestSeller = () => {
   useEffect(() => {
     const fetchBestSellingProducts = async () => {
       try {
-        const response = await axios.get<BestSellerItem[]>('http://localhost:5000/orders/best-selling?limit=5');
+        const response = await axios.get<BestSellerItem[]>('http://localhost:5000/orders/best-selling?limit=10');
 
         const productDetails = await Promise.all(
           response.data.map(async (item) => {

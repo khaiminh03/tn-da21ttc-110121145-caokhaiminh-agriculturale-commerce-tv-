@@ -53,7 +53,7 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="px-6 max-w-screen-xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 pb-2">
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6 pb-2">
         QUẢN LÝ NGƯỜI DÙNG
       </h1>
 

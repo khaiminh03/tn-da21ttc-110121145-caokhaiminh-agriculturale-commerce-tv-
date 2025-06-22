@@ -107,7 +107,7 @@ const AdminOrders = () => {
 
   return (
     <div className="mt-2 px-4 md:px-8 pb-20 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 pb-2">QUẢN LÍ ĐƠN HÀNG TOÀN HỆ THỐNG</h1>
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6 pb-2">QUẢN LÍ ĐƠN HÀNG TOÀN HỆ THỐNG</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div>

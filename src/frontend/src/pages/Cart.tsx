@@ -10,7 +10,10 @@ const Cart = () => {
   const [showAddress, setShowAddress] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [showSepayModal, setShowSepayModal] = useState(false);
-  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [currentOrders, setCurrentOrders] = useState<any[]>([]);
+   const [paidNotifiedOrders, setPaidNotifiedOrders] = useState<string[]>([]);
+   const [orderStartTimes, setOrderStartTimes] = useState<Record<string, number>>({});
+
   const navigate = useNavigate();
 
   const getUserInfo = () => {
@@ -91,68 +94,69 @@ const Cart = () => {
   };
 
   const placeOrder = async () => {
-    if (products.length === 0) {
-      toast.success("Giỏ hàng trống, vui lòng chọn sản phẩm trước khi đặt hàng.");
+  if (products.length === 0) {
+    toast.success("Giỏ hàng trống, vui lòng chọn sản phẩm trước khi đặt hàng.");
+    return;
+  }
+  if (!address || address.trim() === "") {
+    toast.success("Vui lòng nhập địa chỉ giao hàng hợp lệ!");
+    return;
+  }
+
+  const userInfo = getUserInfo();
+  const userId = userInfo._id;
+
+  if (!userId) {
+    toast.success("Thông tin người dùng chưa đầy đủ hoặc bị thiếu.");
+    return;
+  }
+
+  if (!userInfo.phone || userInfo.phone.trim() === "") {
+    toast.warn("Vui lòng cập nhật số điện thoại trước khi đặt hàng!");
+    return;
+  }
+
+  const orderData = {
+    customerId: userId,
+    items: products.map((product) => ({
+      productId: product._id,
+      supplierId: String(product.supplierId && product.supplierId._id ? product.supplierId._id : product.supplierId).trim(),
+      quantity: product.quantity,
+      price: product.price,
+    })),
+    totalAmount: totalWithTax,
+    shippingAddress: address,
+    paymentMethod: paymentMethod === "Online" ? "Thanh toán trực tuyến" : "Thanh toán khi nhận hàng",
+  };
+
+  try {
+    const response = await fetch("http://localhost:5000/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) {
+      alert("Đặt hàng không thành công!");
       return;
     }
-    if (!address || address.trim() === "") {
-      toast.success("Vui lòng nhập địa chỉ giao hàng hợp lệ!");
-      return;
-    }
 
-    const userInfo = getUserInfo();
-    const userId = userInfo._id;
+    const newOrders = await response.json(); // newOrders: Array of orders
+    console.log("🧾 Các đơn hàng đã tạo:", newOrders);
 
-    if (!userId) {
-      toast.success("Thông tin người dùng chưa đầy đủ hoặc bị thiếu.");
-      return;
-    }
+    if (paymentMethod === "Online") {
+      setCurrentOrders(newOrders);
+      setShowSepayModal(true);
 
-    if (!userInfo.phone || userInfo.phone.trim() === "") {
-      toast.warn("Vui lòng cập nhật số điện thoại trước khi đặt hàng!");
-      return;
-    }
+      // ⏰ Huỷ tất cả đơn chưa thanh toán sau 1 phút
+      setTimeout(async () => {
+        try {
+          for (const order of newOrders) {
+            const res = await fetch(`http://localhost:5000/orders/${order._id}`);
+            const currentOrder = await res.json();
 
-    const orderData = {
-      customerId: userId,
-      items: products.map((product) => ({
-        productId: product._id,
-        supplierId: String(product.supplierId && product.supplierId._id ? product.supplierId._id : product.supplierId).trim(),
-        quantity: product.quantity,
-        price: product.price,
-      })),
-      totalAmount: totalWithTax,
-      shippingAddress: address,
-      paymentMethod: paymentMethod === "Online" ? "Thanh toán trực tuyến" : "Thanh toán khi nhận hàng",
-    };
-
-    try {
-      const response = await fetch("http://localhost:5000/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-      });
-
-      if (!response.ok) {
-        alert("Đặt hàng không thành công!");
-        return;
-      }
-
-      const newOrder = await response.json();
-      console.log("🧾 Tạo đơn mới:", newOrder);
-
-      if (paymentMethod === "Online") {
-        setCurrentOrderId(newOrder._id);
-        setShowSepayModal(true);
-
-        // ❗ Tự huỷ đơn nếu chưa thanh toán sau 1 phút
-        setTimeout(async () => {
-          try {
-            const res = await fetch(`http://localhost:5000/orders/${newOrder._id}`);
-            const order = await res.json();
-
-            if (!order?.isPaid || order?.status !== "Đã thanh toán") {
-              await fetch(`http://localhost:5000/orders/${newOrder._id}`, {
+            if (!currentOrder?.isPaid || currentOrder.status !== "Đã thanh toán") {
+              await fetch(`http://localhost:5000/orders/${order._id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -160,48 +164,95 @@ const Cart = () => {
                   shippingStatus: "Đã hủy",
                 }),
               });
-
-              toast.warning("Đơn hàng đã bị huỷ do không thanh toán trong vòng 1 phút.");
-              setShowSepayModal(false);
-              localStorage.removeItem("cart");
-              window.dispatchEvent(new Event("cartUpdated"));
-              navigate("/myorder");
             }
-          } catch (error) {
-            console.error("❌ Lỗi huỷ đơn sau 1 phút:", error);
           }
-        }, 60 * 1000);
-      } else {
+
+          toast.warning("Các đơn hàng chưa thanh toán đã bị huỷ sau 1 phút.");
+          setShowSepayModal(false);
+          localStorage.removeItem("cart");
+          window.dispatchEvent(new Event("cartUpdated"));
+          navigate("/myorder");
+        } catch (error) {
+          console.error("Lỗi khi huỷ đơn:", error);
+        }
+      }, 60 * 1000);
+    } else {
+      localStorage.removeItem("cart");
+      window.dispatchEvent(new Event("cartUpdated"));
+      navigate("/myorder");
+    }
+  } catch (error) {
+    console.error("Lỗi khi đặt hàng:", error);
+    alert("Đặt hàng không thành công!");
+  }
+};
+
+  // 🔁 Theo dõi trạng thái thanh toán
+
+
+useEffect(() => {
+  if (!showSepayModal || currentOrders.length === 0) return;
+
+  // Khởi tạo thời điểm bắt đầu đếm ngược cho từng đơn hàng
+  const now = Date.now();
+  const startTimes: Record<string, number> = {};
+  currentOrders.forEach((order) => {
+    startTimes[order._id] = now;
+  });
+  setOrderStartTimes(startTimes);
+
+  const interval = setInterval(async () => {
+    try {
+      const updatedOrders = await Promise.all(
+        currentOrders.map(async (order) => {
+          const res = await fetch(`http://localhost:5000/orders/${order._id}`);
+          return res.json();
+        })
+      );
+
+      const now = Date.now();
+      let allFinalized = true;
+
+      for (const order of updatedOrders) {
+        if (order.isPaid && !paidNotifiedOrders.includes(order._id)) {
+          toast.success(`✅ Đơn hàng ${order._id.slice(-5)} đã được thanh toán!`);
+          setPaidNotifiedOrders((prev) => [...prev, order._id]);
+        }
+
+        if (!order.isPaid && now - (orderStartTimes[order._id] || 0) >= 60000) {
+          // Nếu chưa thanh toán và quá 1 phút
+          await fetch(`http://localhost:5000/orders/${order._id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: "Đã huỷ",
+              shippingStatus: "Đã hủy",
+            }),
+          });
+          toast.warning(`⏰ Đơn hàng ${order._id.slice(-5)} đã bị huỷ vì không thanh toán sau 1 phút.`);
+          setPaidNotifiedOrders((prev) => [...prev, order._id]); // Đánh dấu đã xử lý để không kiểm tra lại
+        }
+
+        // Nếu đơn nào chưa thanh toán hoặc chưa hủy → tiếp tục chờ
+        if (!order.isPaid && !paidNotifiedOrders.includes(order._id)) {
+          allFinalized = false;
+        }
+      }
+
+      if (allFinalized) {
+        clearInterval(interval);
+        setShowSepayModal(false);
         localStorage.removeItem("cart");
         window.dispatchEvent(new Event("cartUpdated"));
         navigate("/myorder");
       }
     } catch (error) {
-      console.error("Lỗi khi đặt hàng:", error);
-      alert("Đặt hàng không thành công!");
+      console.error("Lỗi kiểm tra đơn hàng:", error);
     }
-  };
+  }, 5000);
 
-  // 🔁 Theo dõi trạng thái thanh toán
-  useEffect(() => {
-    if (!showSepayModal || !currentOrderId) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/orders/${currentOrderId}`);
-        const data = await res.json();
-        if (data?.isPaid) {
-          clearInterval(interval);
-          setShowSepayModal(false);
-          localStorage.removeItem("cart");
-          toast.success("Thanh toán thành công!");
-          navigate("/myorder");
-        }
-      } catch (err) {
-        console.error("Lỗi kiểm tra đơn hàng:", err);
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [showSepayModal, currentOrderId]);
+  return () => clearInterval(interval);
+}, [showSepayModal, currentOrders, paidNotifiedOrders, orderStartTimes]);
 
   return (
     <div className="flex flex-col md:flex-row py-16 max-w-6xl w-full px-6 mx-auto">
@@ -340,19 +391,19 @@ const Cart = () => {
           Thanh toán
         </button>
 
-        {currentOrderId && (
-          <SepayPaymentModal
-            open={showSepayModal}
-            onClose={() => {
-              setShowSepayModal(false);
-              window.dispatchEvent(new Event("cartUpdated"));
-              navigate("/myorder");
-              localStorage.removeItem("cart");
-            }}
-            orderId={currentOrderId}
-            amount={totalWithTax}
-          />
-        )}
+        {showSepayModal && currentOrders.length > 0 && (
+        <SepayPaymentModal
+          open={true}
+          onClose={() => {
+            setShowSepayModal(false);
+            setCurrentOrders([]);
+            window.dispatchEvent(new Event("cartUpdated"));
+            navigate("/myorder");
+            localStorage.removeItem("cart");
+          }}
+          orders={currentOrders}
+        />
+      )}
       </div>
     </div>
   );

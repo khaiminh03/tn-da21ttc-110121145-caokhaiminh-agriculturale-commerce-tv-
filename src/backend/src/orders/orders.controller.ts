@@ -71,7 +71,7 @@ export class OrdersController {
   }
   @Get('best-selling')
 async getBestSellingProducts(@Query('limit') limit: string) {
-  const limitNumber = parseInt(limit) || 5;
+  const limitNumber = parseInt(limit) || 10;
   return this.ordersService.getBestSellingProducts(limitNumber);
 }
 

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 @Schema({ _id: false })
 export class OrderItem {
@@ -56,7 +56,6 @@ export class Order {
   isReviewed?: boolean;
 
 }
-
-export type OrderDocument = Order & Document;
+export type OrderDocument = HydratedDocument<Order>;
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

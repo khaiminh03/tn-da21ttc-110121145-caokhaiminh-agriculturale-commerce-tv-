@@ -71,6 +71,7 @@ import brown_rice_image from "./brown_rice_image.png";
 import barley_image from "./barley_image.png";
 import bootom_banner from "./bottom_banner.png";
 import logoe from "./logoe.svg";
+import mainbg from "./main_bg.svg";
 export const assets = {
   logo,
   search_icon,
@@ -101,6 +102,7 @@ export const assets = {
   box_icon,
   bootom_banner,
   logoe,
+  mainbg,
 };
 
 export const categories = [

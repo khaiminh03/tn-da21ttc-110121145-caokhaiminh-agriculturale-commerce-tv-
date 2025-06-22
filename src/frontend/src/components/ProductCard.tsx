@@ -49,7 +49,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
     localStorage.setItem("cart", JSON.stringify(cart));
 
-    // ✅ Phát sự kiện để Navbar nhận biết cập nhật
+    //  Phát sự kiện để Navbar nhận biết cập nhật
     window.dispatchEvent(new Event("cartUpdated"));
 
     toast.success(`Đã thêm "${product.name}" vào giỏ hàng!`);

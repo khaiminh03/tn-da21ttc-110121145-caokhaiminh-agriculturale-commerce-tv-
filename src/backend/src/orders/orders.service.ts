@@ -2,9 +2,10 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { Model, Types } from 'mongoose';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { CreateOrderDto, OrderItemDto} from './dto/create-order.dto';
 import { Product, ProductDocument } from '../products/schemas/product.schema';
 import mongoose from 'mongoose';
+
 
 @Injectable()
 export class OrdersService {
@@ -14,40 +15,65 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    try {
-      // 1. Kiểm tra từng sản phẩm
-      for (const item of createOrderDto.items) {
-        const product = await this.productModel.findById(item.productId);
-        if (!product) {
-          throw new NotFoundException(`Không tìm thấy sản phẩm ID ${item.productId}`);
-        }
+  try {
+    const groupedItems: Record<string, OrderItemDto[]> = {};
 
-        if (product.stock < item.quantity) {
-          throw new BadRequestException(`Sản phẩm ${product.name} không đủ hàng tồn kho`);
-        }
-
-        product.stock -= item.quantity;
-        await product.save();
+    // 1. Kiểm tra tồn kho và gom nhóm theo supplier
+    for (const item of createOrderDto.items) {
+      const product = await this.productModel.findById(item.productId);
+      if (!product) {
+        throw new NotFoundException(`Không tìm thấy sản phẩm ID ${item.productId}`);
       }
 
-      // 2. Chuyển tất cả ID sang ObjectId trước khi lưu
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(`Sản phẩm ${product.name} không đủ hàng tồn kho`);
+      }
+
+      product.stock -= item.quantity;
+      await product.save();
+
+      // Gom nhóm theo supplierId
+      const supplierId = item.supplierId;
+      if (!groupedItems[supplierId]) {
+        groupedItems[supplierId] = [];
+      }
+      groupedItems[supplierId].push(item);
+    }
+
+    const createdOrders: OrderDocument[] = [];
+
+    // 2. Tạo đơn hàng theo từng nhà cung cấp
+    for (const supplierId in groupedItems) {
+      const items = groupedItems[supplierId];
+
+      const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
       const orderToSave = {
-        ...createOrderDto,
         customerId: new Types.ObjectId(createOrderDto.customerId),
-         status: 'Chưa thanh toán',
-        items: createOrderDto.items.map(item => ({
+        items: items.map(item => ({
           ...item,
           productId: new Types.ObjectId(item.productId),
           supplierId: new Types.ObjectId(item.supplierId),
         })),
+        totalAmount,
+        shippingAddress: createOrderDto.shippingAddress,
+        paymentMethod: createOrderDto.paymentMethod,
+        status: 'Chưa thanh toán',
+        shippingStatus: 'Chờ xác nhận',
+        isPaid: false,
+        isReviewed: false,
       };
 
       const order = new this.orderModel(orderToSave);
-      return await order.save();
-    } catch (error) {
-      throw new Error(`Failed to create order: ${error.message}`);
+      const savedOrder = await order.save();
+      createdOrders.push(savedOrder);
     }
+
+    return createdOrders;
+  } catch (error) {
+    throw new Error(`Failed to create orders: ${error.message}`);
   }
+}
 
 async getOrdersWithProductDetails() {
   return this.orderModel

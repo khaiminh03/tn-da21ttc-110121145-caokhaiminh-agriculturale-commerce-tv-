@@ -143,7 +143,7 @@ const MyOrders = () => {
             </div>
 
             {order.items.map((item, idx) => (
-              <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-t pt-4">
+              <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start  pt-4">
                 <div className="space-y-2 col-span-2">
                   <div className="flex gap-3 items-center">
                     <img
@@ -194,7 +194,8 @@ const MyOrders = () => {
               </div>
             </div>
 
-            {(order.status === "Chưa thanh toán" && order.shippingStatus === "Chờ xác nhận") && (
+            {order.status === "Chưa thanh toán" &&
+            (order.shippingStatus === "Chờ xác nhận" || order.shippingStatus === "Đã xác nhận") && (
               <div className="text-right">
                 <button
                   onClick={() => handleCancelOrder(order._id)}

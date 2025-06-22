@@ -28,14 +28,56 @@ const AdminPendingProducts = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
 
-  const fetchPendingProducts = async () => {
-    const res = await axios.get('http://localhost:5000/products/admin?status=pending');
-    setPendingProducts(res.data);
+  // Hàm lấy thông tin nhà cung cấp theo supplierId
+  const fetchSupplierInfo = async (supplierId: string) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/store-profiles/by-user/${supplierId}`);
+      return {
+        supplierName: res.data.storeName,
+        supplierPhone: res.data.phone,
+      };
+    } catch {
+      return {
+        supplierName: 'Không rõ',
+        supplierPhone: 'Không rõ',
+      };
+    }
   };
 
+  // Lấy sản phẩm chờ duyệt + thêm thông tin nhà cung cấp
+  const fetchPendingProducts = async () => {
+    const res = await axios.get('http://localhost:5000/products/admin?status=pending');
+    const products: Product[] = res.data;
+
+    const productsWithSupplier = await Promise.all(
+      products.map(async (p) => {
+        if (p.supplierId) {
+          const supplierInfo = await fetchSupplierInfo(p.supplierId);
+          return { ...p, ...supplierInfo };
+        }
+        return { ...p, supplierName: 'Không rõ', supplierPhone: 'Không rõ' };
+      })
+    );
+
+    setPendingProducts(productsWithSupplier);
+  };
+
+  // Lấy sản phẩm bị từ chối + thêm thông tin nhà cung cấp
   const fetchRejectedProducts = async () => {
     const res = await axios.get('http://localhost:5000/products/admin?status=rejected');
-    setRejectedProducts(res.data);
+    const products: Product[] = res.data;
+
+    const productsWithSupplier = await Promise.all(
+      products.map(async (p) => {
+        if (p.supplierId) {
+          const supplierInfo = await fetchSupplierInfo(p.supplierId);
+          return { ...p, ...supplierInfo };
+        }
+        return { ...p, supplierName: 'Không rõ', supplierPhone: 'Không rõ' };
+      })
+    );
+
+    setRejectedProducts(productsWithSupplier);
   };
 
   const handleApprove = async (id: string) => {
@@ -87,7 +129,7 @@ const AdminPendingProducts = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">Duyệt sản phẩm</h2>
+      <h2 className="text-3xl text-center font-bold mb-6 text-gray-800">DUYỆT SẢN PHẨM</h2>
 
       {pendingProducts.length === 0 ? (
         <p className="text-gray-600">Không có sản phẩm chờ duyệt.</p>
@@ -107,6 +149,8 @@ const AdminPendingProducts = () => {
               <p className="text-sm text-gray-600 mb-1">Giá: {p.price.toLocaleString()}₫</p>
               <p className="text-sm text-gray-600 mb-1">Tồn kho: {p.stock}</p>
               <p className="text-sm text-gray-600">Xuất xứ: {p.origin}</p>
+              <p className="text-sm text-gray-600">Nhà cung cấp: {p.supplierName || 'Không rõ'}</p>
+              <p className="text-sm text-gray-600">SĐT: {p.supplierPhone || 'Không rõ'}</p>
 
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
@@ -154,6 +198,7 @@ const AdminPendingProducts = () => {
               <p className="text-sm text-gray-600 mb-1">Tồn kho: {p.stock}</p>
               <p className="text-sm text-gray-600">Xuất xứ: {p.origin}</p>
               <p className="text-sm text-gray-600">Nhà cung cấp: {p.supplierName || 'Không rõ'}</p>
+              <p className="text-sm text-gray-600">SĐT: {p.supplierPhone || 'Không rõ'}</p>
               <p className="mt-3 text-sm text-red-700 bg-red-100 border border-red-200 px-4 py-1 rounded-full inline-block font-medium">
                 ❗ Lý do từ chối: {p.rejectionReason || 'Không có'}
               </p>

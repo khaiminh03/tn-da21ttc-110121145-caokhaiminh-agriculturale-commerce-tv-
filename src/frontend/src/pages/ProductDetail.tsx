@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import ProductCard from '../components/ProductCard';
 
 interface Supplier {
   _id: string;
@@ -49,6 +50,7 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [thumbnail, setThumbnail] = useState<string>(DEFAULT_IMAGE);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -77,7 +79,19 @@ const ProductDetail = () => {
     }
   }, [id]);
 
-  // 🔔 Cảnh báo nếu sản phẩm hết hàng khi load xong
+  useEffect(() => {
+    const fetchSimilar = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/products/${id}/similar`);
+        setSimilarProducts(res.data);
+      } catch (err) {
+        console.error("Lỗi khi lấy sản phẩm tương tự:", err);
+      }
+    };
+
+    if (id) fetchSimilar();
+  }, [id]);
+
   useEffect(() => {
     if (product && product.stock === 0) {
       toast.warn('Sản phẩm này hiện đã hết hàng.');
@@ -161,7 +175,7 @@ const ProductDetail = () => {
           <h1 className="text-3xl font-medium">{product.name}</h1>
           <div className="mt-6">
             <p className="text-2xl font-medium text-green-600">Giá: {product.price.toLocaleString()}₫</p>
-            <span className="text-gray-500/70">(Đã bao gồm thuế VAT)</span>
+            <span className="text-gray-500/70">(Hỗ trợ giao hàng toàn tỉnh Trà Vinh – nhanh chóng trong 24h)</span>
           </div>
 
           <p className="text-base font-medium mt-6">Mô tả:</p>
@@ -198,26 +212,38 @@ const ProductDetail = () => {
         </div>
       </div>
 
+    {similarProducts.length > 0 && (
+    <div className="mt-12">
+      <h2 className="text-2xl font-bold mb-6 text-center">Sản phẩm tương tự</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 justify-items-center">
+        {similarProducts.map((item) => (
+          <ProductCard key={item._id} product={item} />
+        ))}
+      </div>
+    </div>
+    )}
       {product.supplierId && (
         <div className="mt-12">
           <div className="bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-2xl shadow p-6">
             <div className="flex items-center gap-4 mb-4">
-              {product.supplierId.imageUrl ? (
-                <img
-                  src={`http://localhost:5000/uploads/${product.supplierId.imageUrl}`}
-                  alt="Ảnh nhà cung cấp"
-                  className="w-16 h-16 rounded-full object-cover border border-green-300"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">N/A</div>
-              )}
-              <div>
-                <h3 className="text-lg font-bold text-green-700">
-                  {product.supplierId.storeName ?? product.supplierId.name}
-                </h3>
-                <p className="text-sm text-gray-500"><strong>Địa chỉ:</strong> {product.supplierId.address}</p>
-                <p className="text-sm text-gray-500"><strong>Số điện thoại: +</strong>{product.supplierId.phone}</p>
-              </div>
+              <Link to={`/supplier/${product.supplierId._id}`} className="flex items-center gap-4 mb-4 group">
+                {product.supplierId.imageUrl ? (
+                  <img
+                    src={`http://localhost:5000/uploads/${product.supplierId.imageUrl}`}
+                    alt="Ảnh nhà cung cấp"
+                    className="w-16 h-16 rounded-full object-cover border border-green-300 group-hover:ring-2 ring-green-400"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">N/A</div>
+                )}
+                <div>
+                  <h3 className="text-lg font-bold text-green-700 group-hover:underline">
+                    {product.supplierId.storeName ?? product.supplierId.name}
+                  </h3>
+                  <p className="text-sm text-gray-500"><strong>Địa chỉ:</strong> {product.supplierId.address}</p>
+                  <p className="text-sm text-gray-500"><strong>Số điện thoại: </strong>{product.supplierId.phone}</p>
+                </div>
+              </Link>
             </div>
           </div>
         </div>

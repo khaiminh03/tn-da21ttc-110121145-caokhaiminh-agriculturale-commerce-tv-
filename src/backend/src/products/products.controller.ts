@@ -185,6 +185,15 @@ async getRejectedProductsBySupplier(
     isActive: true,
   });
 }
+// san pham tuong tu 
+@Get(':id/similar')
+async getSimilar(@Param('id') id: string): Promise<Product[]> {
+  const product = await this.productsService.findOne(id);
+  if (!product) {
+    throw new NotFoundException(`Product with id ${id} not found`);
+  }
 
+  return this.productsService.getSimilarProducts(product.categoryId.toString(), id);
+}
 
 }

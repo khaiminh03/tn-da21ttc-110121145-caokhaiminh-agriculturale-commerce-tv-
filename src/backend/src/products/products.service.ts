@@ -35,7 +35,7 @@ export class ProductsService {
 
   async findAll(): Promise<Product[]> {
   return this.productModel
-    .find({ isActive: true, status: 'approved' }) // ✅ đã duyệt mới cho khách xem
+    .find({ isActive: true, status: 'approved' }) // đã duyệt mới cho khách xem
     .sort({ createdAt: -1 })
     .exec();
 }
@@ -56,8 +56,6 @@ export class ProductsService {
 
   return products;
 }
-
-
 
   async findOne(id: string): Promise<any> {
     const product = await this.productModel.findById(id)
@@ -150,6 +148,18 @@ async updateById(id: string, updateProductDto: UpdateProductDto): Promise<Produc
     const result = await this.productModel.deleteOne({ _id: id }).exec();
     return { deleted: result.deletedCount > 0 };
   }
+  // san pham tuong tu
+ async getSimilarProducts(categoryId: string, excludeId: string): Promise<Product[]> {
+  return this.productModel.find({
+    categoryId: new Types.ObjectId(categoryId),
+    _id: { $ne: new Types.ObjectId(excludeId) }, // loại trừ sản phẩm đang xem
+    isActive: true,
+    status: 'approved',
+  })
+  .limit(6) // giới hạn 6 sản phẩm tương tự
+  .exec();
+}
+
 
 
 }

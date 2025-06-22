@@ -60,7 +60,7 @@ const AdminReviewList = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 pb-2">
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6 pb-2">
         ĐÁNH GIÁ SẢN PHẨM
       </h2>
 
