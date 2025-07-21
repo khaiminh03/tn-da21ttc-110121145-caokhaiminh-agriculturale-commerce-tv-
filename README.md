@@ -4,7 +4,7 @@
 
 Xây dựng một hệ thống sàn thương mại điện tử chuyên biệt cho lĩnh vực **nông sản tại tỉnh Trà Vinh**
 ### Yêu cầu chức năng
-Khách hàng
+### Khách hàng
 - Đăng ký/đăng nhập
 - Tìm kiếm sản phẩm theo tên, danh mục, giá.
 - Lọc sản phẩm theo các tiêu chí: giá, loại nông sản.
@@ -14,14 +14,14 @@ Khách hàng
 - Xem lịch sử đơn hàng với trạng thái: đang xử lý, đang giao, đã giao, đã hủy.
 - Xem chi tiết từng đơn: sản phẩm, số lượng, tổng tiền, thời gian.
 - Đánh giá sao (1-5) cho từng sản phẩm đã mua.
-Nhà cung cấp
+### Nhà cung cấp
 - Thêm mới sản phẩm: tên, ảnh, mô tả, thành phần, giá bán, số lượng tồn kho.
 - Sửa, xoá sản phẩm đã đăng.
 - Cập nhật trạng thái sản phẩm: còn hàng, hết hàng, tạm ngừng bán..
 - Xem danh sách đơn hàng mới, đang xử lý, đã giao.
 - Cập nhật trạng thái đơn hàng (Chờ xác nhận, Đã xác nhận, Đang giao hàng, Giao thất bại, Hoàn thành, Đã hủy).
 - Thống kê doanh thu.
-Quản trị
+### Quản trị
 - Xem danh sách tất cả khách hàng và nhà cung cấp.
 - Khóa/mở khóa tài khoản người dùng.
 - Quản lý danh mục nông sản (thêm,sửa).
